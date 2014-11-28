@@ -12,9 +12,8 @@ import java.io.IOException;
  * @author mhck
  */
 public class BankTwoTranslator {
-
     private static final String BANKEXCHANGE_NAME = "cphbusiness.bankXML";
-    private static final String REPLY_QUEUE = "normalizer";
+    private static final String REPLY_QUEUE = "bank_one_normalizer";
     private static final String QUEUE_NAME = "xml_translator_two";
 
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -37,13 +36,14 @@ public class BankTwoTranslator {
         while (true) {
             QueueingConsumer.Delivery delivery = consumer.nextDelivery();
             //channelIn.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
-            System.out.println(new String(delivery.getBody()));
+            //System.out.println(new String(delivery.getBody()));
             String message = translateMessage(delivery);
+            System.out.println(message);
             BasicProperties probs = new BasicProperties.Builder().replyTo(REPLY_QUEUE).build();
             channelOut.basicPublish(BANKEXCHANGE_NAME, "", probs, message.getBytes());
         }
     }
-
+    
     private static String translateMessage(QueueingConsumer.Delivery delivery) {
         String message = new String(delivery.getBody());
         return DateCalculator.translateDate(message);
