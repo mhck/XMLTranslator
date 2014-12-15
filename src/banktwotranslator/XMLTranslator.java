@@ -7,6 +7,14 @@ import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.QueueingConsumer;
 import com.rabbitmq.client.QueueingConsumer.Delivery;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import utilities.xml.xmlMapper;
 
 /**
  *
@@ -54,6 +62,20 @@ public class XMLTranslator {
     
     private static String translateMessage(QueueingConsumer.Delivery delivery) {
         String message = new String(delivery.getBody());
+        XPath xPath =  XPathFactory.newInstance().newXPath();
+        Document doc = xmlMapper.getXMLDocument(message); 
+        try {
+            String ssn = xPath.compile("/LoanRequest/ssn").evaluate(doc);
+            ssn = ssn.replace("-", ""); 
+//            System.out.println("BEFORE text content: " + doc.getElementsByTagName("ssn").item(0).getFirstChild().getTextContent());
+//            System.out.println("BEFORE ITEM(0).getFirstChild().getNodeValue(): " + doc.getElementsByTagName("ssn").item(0).getFirstChild().getNodeValue());
+            doc.getElementsByTagName("ssn").item(0).getFirstChild().setNodeValue(ssn);
+//            System.out.println(doc.toString());
+//            System.out.println("AFTER ITEM(0).getFirstChild().getNodeValue(): " + doc.getElementsByTagName("ssn").item(0).getFirstChild().getNodeValue());
+//            System.out.println("AFTER text content: " + doc.getElementsByTagName("ssn").item(0).getFirstChild().getTextContent());
+        } catch (XPathExpressionException ex) {
+            Logger.getLogger(XMLTranslator.class.getName()).log(Level.SEVERE, null, ex);
+        }
         return DateCalculator.translateDate(message);
     }
 }
