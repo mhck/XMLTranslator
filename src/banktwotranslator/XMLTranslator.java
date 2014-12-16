@@ -6,6 +6,7 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.QueueingConsumer;
 import com.rabbitmq.client.QueueingConsumer.Delivery;
+import dk.cphbusiness.connection.ConnectionCreator;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -21,6 +22,7 @@ import utilities.xml.xmlMapper;
  * @author mhck
  */
 public class XMLTranslator {
+
     private static final String BANKEXCHANGE_NAME = "cphbusiness.bankXML";
     private static final String REPLY_QUEUE = "bank_one_normalizer";
     private static final String EXCHANGE_NAME = "translator_exchange_topic";
@@ -28,21 +30,16 @@ public class XMLTranslator {
     private static final String[] TOPICS = {"expensive.*"};
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setUsername("nicklas");
-        factory.setPassword("cph");
-        factory.setHost("datdb.cphbusiness.dk");
-
-        Connection connection = factory.newConnection();
-        Channel channelIn = connection.createChannel();
-        Channel channelOut = connection.createChannel();
+        ConnectionCreator creator = ConnectionCreator.getInstance();
+        Channel channelIn = creator.createChannel();
+        Channel channelOut = creator.createChannel();
         channelIn.queueDeclare(QUEUE_NAME, true, false, false, null);
         channelIn.exchangeDeclare(EXCHANGE_NAME, "topic");
-        
-        for(String topic: TOPICS){
-            channelIn.queueBind(QUEUE_NAME, EXCHANGE_NAME,topic);
+
+        for (String topic : TOPICS) {
+            channelIn.queueBind(QUEUE_NAME, EXCHANGE_NAME, topic);
         }
-        
+
         QueueingConsumer consumer = new QueueingConsumer(channelIn);
         channelIn.basicConsume(QUEUE_NAME, true, consumer);
 //        String testMessage = "{\"ssn\":1605789787,\"loanAmount\":10.0,\"loanDuration\":360,\"rki\":false}"; //test sender besked til sig selv.
@@ -59,14 +56,14 @@ public class XMLTranslator {
             channelOut.basicPublish(BANKEXCHANGE_NAME, "", probs, message.getBytes());
         }
     }
-    
+
     private static String translateMessage(QueueingConsumer.Delivery delivery) {
         String message = new String(delivery.getBody());
-        XPath xPath =  XPathFactory.newInstance().newXPath();
-        Document doc = xmlMapper.getXMLDocument(message); 
+        XPath xPath = XPathFactory.newInstance().newXPath();
+        Document doc = xmlMapper.getXMLDocument(message);
         try {
             String ssn = xPath.compile("/LoanRequest/ssn").evaluate(doc);
-            ssn = ssn.replace("-", ""); 
+            ssn = ssn.replace("-", "");
 //            System.out.println("BEFORE text content: " + doc.getElementsByTagName("ssn").item(0).getFirstChild().getTextContent());
 //            System.out.println("BEFORE ITEM(0).getFirstChild().getNodeValue(): " + doc.getElementsByTagName("ssn").item(0).getFirstChild().getNodeValue());
             doc.getElementsByTagName("ssn").item(0).getFirstChild().setNodeValue(ssn);
