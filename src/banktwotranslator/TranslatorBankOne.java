@@ -42,12 +42,11 @@ public class TranslatorBankOne {
 
         QueueingConsumer consumer = new QueueingConsumer(channelIn);
         channelIn.basicConsume(INQUEUE_NAME, true, consumer);
-
-
-        while (true) {
+        System.out.println("Translator for Bank One running");
+        while (true) {    
             Delivery delivery = consumer.nextDelivery();
+            System.out.println("Got message: " + new String(delivery.getBody()));
             String message = translateMessage(delivery);
-            System.out.println(message);
             BasicProperties probs = new BasicProperties.Builder().replyTo(REPLY_QUEUE).correlationId("1").build();
             channelOut.basicPublish(BANKEXCHANGE_NAME, "", probs, message.getBytes());
         }
