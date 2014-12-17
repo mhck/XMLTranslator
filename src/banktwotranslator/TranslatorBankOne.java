@@ -47,7 +47,8 @@ public class TranslatorBankOne {
             Delivery delivery = consumer.nextDelivery();
             System.out.println("Got message: " + new String(delivery.getBody()));
             String message = translateMessage(delivery);
-            BasicProperties probs = new BasicProperties.Builder().replyTo(REPLY_QUEUE).correlationId("1").build();
+            System.out.println("publish: " + message);
+            BasicProperties probs = new BasicProperties.Builder().replyTo(REPLY_QUEUE).correlationId(delivery.getProperties().getCorrelationId()).build();
             channelOut.basicPublish(BANKEXCHANGE_NAME, "", probs, message.getBytes());
         }
     }
@@ -60,9 +61,11 @@ public class TranslatorBankOne {
             String ssn = xPath.compile("/LoanRequest/ssn").evaluate(doc);
             ssn = ssn.replace("-", "");
             doc.getElementsByTagName("ssn").item(0).getFirstChild().setNodeValue(ssn);
+            
+            System.out.println("after replace of doom: " + xmlMapper.getStringFromDoc(doc));
         } catch (XPathExpressionException ex) {
             Logger.getLogger(TranslatorBankOne.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return DateCalculator.translateDate(message);
+        return DateCalculator.translateDate(xmlMapper.getStringFromDoc(doc));
     }
 }
