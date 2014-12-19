@@ -27,7 +27,7 @@ public class TranslatorBankOne {
     private static final String REPLY_QUEUE = "bank_one_normalizer_gr1";
     private static final String EXCHANGE_NAME = "ex_translators_gr1";
     private static final String INQUEUE_NAME = "xml_translator_two_gr1";
-    private static final String[] TOPICS = {"expensive.high"};
+    private static final String[] TOPICS = {"expensive.*"};
 
     public static void main(String[] args) throws IOException, InterruptedException {
         ConnectionCreator creator = ConnectionCreator.getInstance();
@@ -62,7 +62,6 @@ public class TranslatorBankOne {
             ssn = ssn.replace("-", "");
             doc.getElementsByTagName("ssn").item(0).getFirstChild().setNodeValue(ssn);
             
-            System.out.println("after replace of doom: " + xmlMapper.getStringFromDoc(doc));
         } catch (XPathExpressionException ex) {
             Logger.getLogger(TranslatorBankOne.class.getName()).log(Level.SEVERE, null, ex);
         }
